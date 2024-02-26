@@ -10,7 +10,7 @@ import (
 )
 
 // App version
-const version = "0.0.01"
+const version = "1.0"
 
 type config struct {
 	port int

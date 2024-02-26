@@ -25,7 +25,6 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 
 type envelope map[string]any
 
-// Change the data parameter to have the type envelope instead of any.
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	// Encode the data to JSON, returning the error if there was one.
 	js, err := json.MarshalIndent(data, "", "\t")
@@ -34,11 +33,8 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	}
 	// Append a newline to make it easier to view in terminal applications.
 	js = append(js, '\n')
-	// At this point, we know that we won't encounter any more errors before writing the
-	// response, so it's safe to add any headers that we want to include. We loop
-	// through the header map and add each header to the http.ResponseWriter header map.
-	// Note that it's OK if the provided header map is nil. Go doesn't throw an error
-	// if you try to range over (or generally, read from) a nil map.
+
+	// loop through the header map and add each header to the http.ResponseWriter header map.
 	for key, value := range headers {
 		w.Header()[key] = value
 	}
@@ -81,9 +77,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 		// If the JSON contains a field which cannot be mapped to the target destination
 		// then Decode() will now return an error message in the format "json: unknown
 		// field "<name>"". We check for this, extract the field name from the error,
-		// and interpolate it into our custom error message. Note that there's an open
-		// issue at https://github.com/golang/go/issues/29035 regarding turning this
-		// into a distinct error type in the future.
+		// and interpolate it into our custom error message.
 		case strings.HasPrefix(err.Error(), "json: unknown field "):
 			fieldName := strings.TrimPrefix(err.Error(), "json: unknown field ")
 			return fmt.Errorf("body contains unknown key %s", fieldName)
