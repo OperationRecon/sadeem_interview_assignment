@@ -35,7 +35,7 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 	// Validate the clients input
 	v := validator.New()
 
-	if data.ValidateUserRegister(v, user); !v.Valid() {
+	if data.ValidateUserRegisteration(v, user); !v.Valid() {
 		// Validation failed, send appropriate error messages
 		app.failedValidationResponse(w, r, v.Errors)
 		return

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"interview_assignment.mohamednaas.net/internal/data"
 )
 
 // App version
@@ -30,6 +31,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func main() {
@@ -60,6 +62,9 @@ func main() {
 	logger.Printf("database connection pool established")
 
 	defer db.Close()
+
+	// Setup Models used to interact with the Database
+	app.models = data.NewModels(db)
 
 	// Set up server
 	srv := &http.Server{
