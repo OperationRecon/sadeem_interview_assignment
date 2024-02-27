@@ -83,6 +83,13 @@ func MinChars(value string, n int) bool {
 }
 
 // cehcks if the file type in the URL provided is one of a few permitted types
-func PermitedFileType(value string, permittedTypes []string) bool {
-	return true
+func PermitedFileType(value string, permittedTypes ...string) bool {
+
+	for i := 0; i < len(permittedTypes); i++ {
+		if value == permittedTypes[i] {
+			return true
+		}
+
+	}
+	return false
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 
 	"interview_assignment.mohamednaas.net/internal/data"
@@ -48,4 +49,33 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+
+func (app *application) insertImageHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Make sure to close the request file after being done with processing the image
+	defer r.Body.Close()
+
+	byte, err := io.ReadAll(r.Body)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+	}
+	mimeType := http.DetectContentType(byte)
+
+	// Make sure that the sent reuqest conatins an image
+	v := validator.New()
+	if v.Check(validator.PermitedFileType(mimeType, "image/jpeg", "image/png"), "image", "Improper File Type"); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	// Validation succesful, attempt to add image
+	env := envelope{
+		"Message": "Create a new image",
+	}
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
 }

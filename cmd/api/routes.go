@@ -19,6 +19,8 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/users/:id/pfpicture", app.insertImageHandler)
+
 	// Return the httprouter instance.
 	return router
 }
