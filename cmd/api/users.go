@@ -42,8 +42,20 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// Validation succesful, attempt to create user.
+	// Inserting user into database
+	id, err := app.models.Users.UserCreate(*user)
+
+	if err != nil {
+		if err == data.ErrDuplicateEmail {
+			app.badRequestResponse(w, r, err)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 	env := envelope{
-		"Message": "Create a new user",
+		"meassage": "User Created Sucessfully",
+		"id":       id,
 	}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
@@ -64,7 +76,8 @@ func (app *application) insertImageHandler(w http.ResponseWriter, r *http.Reques
 
 	// Make sure that the sent reuqest conatins an image
 	v := validator.New()
-	if v.Check(validator.PermitedFileType(mimeType, "image/jpeg", "image/png"), "image", "Improper File Type"); !v.Valid() {
+	if v.Check(validator.PermitedFileType(mimeType, "image/jpeg", "image/png"),
+		"image", "Improper File Type"); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
