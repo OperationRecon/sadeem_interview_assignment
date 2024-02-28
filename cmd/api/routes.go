@@ -24,6 +24,7 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.getUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/:email", app.updateUserHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/users/:email", app.deleteUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.insertImageHandler)
 

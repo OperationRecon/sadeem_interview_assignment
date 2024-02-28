@@ -192,6 +192,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Read values to use in updating the user
+
 	// / Create the input structure
 	var input struct {
 		Name     string `json:"name"`
@@ -204,6 +205,13 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+	}
+
+	// get the email to be updated
+	email, err := app.readEmailParam(r)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 	// Read the input into appropriate structure
@@ -223,10 +231,22 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// All good? update user information
-	err = app.models.Users.UserUpdate(*user)
+	err = app.models.Users.UserUpdate(*user, email)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		switch {
+		case err == data.ErrDuplicateEmail:
+			{
+				app.badRequestResponse(w, r, err)
+				return
+			}
+
+		case err == data.ErrRecordNotFound:
+			{
+				app.notFoundResponse(w, r)
+				return
+			}
+
+		}
 	}
 
 	// Compose JSON reply
@@ -239,5 +259,35 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
+	}
+}
+
+func (app *application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the Email to use for user lookup
+	email, err := app.readEmailParam(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Use email for query
+	err = app.models.Users.UserDelete(email)
+	if err != nil {
+		if err == data.ErrRecordNotFound {
+			app.notFoundResponse(w, r)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Infrom user of deletion
+	envelope := envelope{
+		"message": "User deleted successfully",
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
 	}
 }

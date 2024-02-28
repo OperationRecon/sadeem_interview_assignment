@@ -114,11 +114,12 @@ func (m *UserModel) UserUpdatePicture(picture, email string) error {
 }
 
 // Updateing other user info using a JSON request
-func (m *UserModel) UserUpdate(u User) error {
+func (m *UserModel) UserUpdate(u User, email string) error {
 	// create query
 	q := `UPDATE users
 	set email = $1, name = $2, password_hash = $3
-	WHERE email = $1`
+	WHERE email = $1
+	RETURNING email, name `
 
 	// Generate password hash to insert into db
 	pHashed, err := Set(u.Password)
@@ -126,17 +127,29 @@ func (m *UserModel) UserUpdate(u User) error {
 		return err
 	}
 
-	args := []any{u.Email, u.Name, pHashed}
+	args := []any{email, u.Name, pHashed}
 
 	// execute query
-	_ = m.DB.QueryRow(q, args...)
+	err = m.DB.QueryRow(q, args...).Scan(&u.Email, &u.Name)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_email"`:
+			return ErrDuplicateEmail
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrRecordNotFound
 
+		}
+	}
 	// insert was sucessful, carry on.
 	return nil
 }
 
-// Deleting a User by id
-func (m *UserModel) UserDelete(id int) error {
+// Deleting a User by email
+func (m *UserModel) UserDelete(email string) error {
+	// prep query
+	q := `DELETE FROM users WHERE email = $1`
+
+	_ = m.DB.QueryRow(q, email).Scan()
 	return nil
 }
 
