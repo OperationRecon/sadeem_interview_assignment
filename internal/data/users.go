@@ -88,7 +88,7 @@ func (m *UserModel) UserGet(email string, r http.Request) (User, error) {
 	}
 
 	// Make nice URl to find image in
-	user.Picture = fmt.Sprintf("http://%s/static/profile_pictures/%s", r.Host, user.Picture)
+	user.Picture = fmt.Sprintf("http://%s/static/%s", r.Host, user.Picture)
 
 	// all good? retirn user data
 	return user, nil
@@ -115,6 +115,23 @@ func (m *UserModel) UserUpdatePicture(picture, email string) error {
 
 // Updateing other user info using a JSON request
 func (m *UserModel) UserUpdate(u User) error {
+	// create query
+	q := `UPDATE users
+	set email = $1, name = $2, password_hash = $3
+	WHERE email = $1`
+
+	// Generate password hash to insert into db
+	pHashed, err := Set(u.Password)
+	if err != nil {
+		return err
+	}
+
+	args := []any{u.Email, u.Name, pHashed}
+
+	// execute query
+	_ = m.DB.QueryRow(q, args...)
+
+	// insert was sucessful, carry on.
 	return nil
 }
 

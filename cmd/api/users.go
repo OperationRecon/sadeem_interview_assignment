@@ -189,3 +189,55 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Read values to use in updating the user
+	// / Create the input structure
+	var input struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Picture  string `json:"picture"`
+	}
+
+	// Read the request into the input struct
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+	}
+
+	// Read the input into appropriate structure
+	user := &data.User{
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: input.Password,
+		Picture:  input.Picture,
+	}
+	// Validate the clients input
+	v := validator.New()
+
+	if data.ValidateUserRegisteration(v, user); !v.Valid() {
+		// Validation failed, send appropriate error messages
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	// All good? update user information
+	err = app.models.Users.UserUpdate(*user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Compose JSON reply
+	envelope := envelope{
+		"message": "updated information:",
+		"user":    user,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}

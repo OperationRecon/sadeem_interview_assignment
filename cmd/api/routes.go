@@ -2,9 +2,9 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/julienschmidt/httprouter"
-	"interview_assignment.mohamednaas.net/userdata"
 )
 
 func (app *application) routes() *httprouter.Router {
@@ -14,11 +14,8 @@ func (app *application) routes() *httprouter.Router {
 	// Register the relevant methods, URL patterns and handler functions for our
 	// endpoints using the HandlerFunc() method.
 
-	// create file server to handle serveing out of ui/static/
-	fileServer := http.FileServer(http.FS(userdata.Files))
-
 	// handle serving the static files
-	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
+	router.ServeFiles("/static/*filepath", http.Dir(os.Getenv("sainpr_pfp_dir")))
 
 	// Set custom handlers for aftermentioned routes
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
@@ -26,8 +23,9 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.getUserHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/users/:email", app.updateUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/users/:email/pfpicture", app.insertImageHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.insertImageHandler)
 
 	// Return the httprouter instance.
 	return router
