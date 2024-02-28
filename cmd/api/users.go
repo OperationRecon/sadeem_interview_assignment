@@ -92,3 +92,34 @@ func (app *application) insertImageHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 }
+
+// Handler for fecthing user information via email
+func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	email, err := app.readEmailParam(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+	}
+
+	// Fetch user info from database
+	user, err := app.models.Users.UserGet(email)
+	if err != nil {
+		if err == data.ErrRecordNotFound {
+			app.notFoundResponse(w, r)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// All good? wrap and output user info
+	envelope := envelope{
+		"message": "user information",
+		"user":    user,
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}

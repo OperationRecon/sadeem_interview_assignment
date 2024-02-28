@@ -18,8 +18,9 @@ func (app *application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.getUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/users/:id/pfpicture", app.insertImageHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/users/:email/pfpicture", app.insertImageHandler)
 
 	// Return the httprouter instance.
 	return router

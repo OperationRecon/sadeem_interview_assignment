@@ -69,8 +69,23 @@ func (m *UserModel) UserCreate(u User) (int, error) {
 }
 
 // Getting user info from the database
-func (m *UserModel) UserGet(id int) User {
-	return User{}
+func (m *UserModel) UserGet(email string) (*User, error) {
+	user := User{}
+	// prepare query
+	q := `SELECT id, name, email, pfp_filepath FROM users WHERE email = $1`
+
+	// excecute query
+	err := m.DB.QueryRow(q, email).Scan(&user.ID, &user.Name, &user.Email, &user.Picture)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	// all good? retirn user data
+	return &user, nil
 }
 
 // Updating user info
@@ -82,6 +97,22 @@ func (m *UserModel) UserUpdatePicture(u User) error {
 
 // Updateing other user info using a JSON request
 func (m *UserModel) UserUpdate(u User) error {
+	// Prepare Query statment
+	q := `UPDATE users
+	SET pfp_filepath = ($1)
+	WHERE email = ($2)
+	RETURNING id`
+
+	args := []any{u.Picture, u.Email}
+
+	err := m.DB.QueryRow(q, args).Scan(&u.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrRecordNotFound
+		}
+		return err
+	}
+	// insert was sucessful, carry on.
 	return nil
 }
 

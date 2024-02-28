@@ -6,21 +6,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
+	"interview_assignment.mohamednaas.net/internal/validator"
 )
 
-// Retrieve the "id" URL parameter from the current request context, then convert it to
-// an integer and return it. If the operation isn't successful, return 0 and an error.
-func (app *application) readIDParam(r *http.Request) (int64, error) {
+// Retrieve the "email" URL parameter from the current request context.
+func (app *application) readEmailParam(r *http.Request) (string, error) {
 	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 1 {
-		return 0, errors.New("invalid id parameter")
+	email := params.ByName("email")
+	if !validator.Matches(email, validator.EmailRX) {
+		return "", errors.New("invalid email parameter")
 	}
-	return id, nil
+	return email, nil
 }
 
 type envelope map[string]any

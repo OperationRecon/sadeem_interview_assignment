@@ -1,1 +1,0 @@
-ALTER TABLE users DROP IF EXISTS COLUMN pfp_filepath;
