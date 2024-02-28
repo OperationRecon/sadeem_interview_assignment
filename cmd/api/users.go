@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path"
+	"strings"
 
 	"interview_assignment.mohamednaas.net/internal/data"
 	"interview_assignment.mohamednaas.net/internal/validator"
@@ -74,17 +78,79 @@ func (app *application) insertImageHandler(w http.ResponseWriter, r *http.Reques
 	}
 	mimeType := http.DetectContentType(byte)
 
+	// Get the email for the user whose pfp is to be added
+	email, err := app.readEmailParam(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+	}
+
+	// use email to fetch other relevant info
+	// Fetch user info from database
+	user, err := app.models.Users.UserGet(email, *r)
+	if err != nil {
+		if err == data.ErrRecordNotFound {
+			app.notFoundResponse(w, r)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	// Make sure that the sent reuqest conatins an image
 	v := validator.New()
-	if v.Check(validator.PermitedFileType(mimeType, "image/jpeg", "image/png"),
+	if v.Check(validator.PermitedFileType(mimeType, "image/jpeg", "image/jpg", "image/png"),
 		"image", "Improper File Type"); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
 	// Validation succesful, attempt to add image
+
+	// Save image into server
+	// get percise file type
+	fType := strings.Split(mimeType, "/")
+
+	// create thepath to be used for storing the image in the server
+	fName := fmt.Sprintf("%s%d.%s", user.Name, user.ID, fType[len(fType)-1])
+
+	// Create image filepath
+	fPath := path.Join(app.config.pictureDir, fName)
+
+	// Create file
+	_, err = os.Create(fPath)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = os.WriteFile(fPath, byte, os.ModeAppend)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Save image filepath into database
+	err = app.models.Users.UserUpdatePicture(fName, user.Email)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// fetch user one last time ensure updated info
+	// Fetch user info from database
+	user, err = app.models.Users.UserGet(user.Email, *r)
+	if err != nil {
+		if err == data.ErrRecordNotFound {
+			app.notFoundResponse(w, r)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	env := envelope{
-		"Message": "Create a new image",
+		"Message": "Image added succesfully",
+		"User":    user,
 	}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
@@ -102,7 +168,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch user info from database
-	user, err := app.models.Users.UserGet(email)
+	user, err := app.models.Users.UserGet(email, *r)
 	if err != nil {
 		if err == data.ErrRecordNotFound {
 			app.notFoundResponse(w, r)

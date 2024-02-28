@@ -18,9 +18,10 @@ import (
 const version = "1.0"
 
 type config struct {
-	port int
-	env  string
-	db   struct {
+	port       int
+	env        string
+	pictureDir string
+	db         struct {
 		dsn          string
 		maxOpenConns int
 		maxIdleConns int
@@ -43,10 +44,12 @@ func main() {
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+	flag.StringVar(&cfg.pictureDir, "pfpicture directory", os.Getenv("sainpr_pfp_dir"), "Directory where users profile images are sotred")
 
 	flag.Parse()
 
 	// Create message and error logger
+
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	app := &application{
 		config: cfg,

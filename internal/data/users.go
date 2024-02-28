@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+
+	"net/http"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -69,7 +72,7 @@ func (m *UserModel) UserCreate(u User) (int, error) {
 }
 
 // Getting user info from the database
-func (m *UserModel) UserGet(email string) (*User, error) {
+func (m *UserModel) UserGet(email string, r http.Request) (User, error) {
 	user := User{}
 	// prepare query
 	q := `SELECT id, name, email, pfp_filepath FROM users WHERE email = $1`
@@ -79,40 +82,39 @@ func (m *UserModel) UserGet(email string) (*User, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrRecordNotFound
+			return user, ErrRecordNotFound
 		}
-		return nil, err
+		return user, err
 	}
 
+	// Make nice URl to find image in
+	user.Picture = fmt.Sprintf("http://%s/static/profile_pictures/%s", r.Host, user.Picture)
+
 	// all good? retirn user data
-	return &user, nil
+	return user, nil
 }
 
 // Updating user info
 
 // Adding a profile picture to the server and database
-func (m *UserModel) UserUpdatePicture(u User) error {
+func (m *UserModel) UserUpdatePicture(picture, email string) error {
+	// Prepare Query statment
+	q := `UPDATE users
+		SET pfp_filepath = $1
+		WHERE email = $2
+		RETURNING id`
+
+	args := []any{picture, email}
+
+	_ = m.DB.QueryRow(q, args...)
+
+	// insert was sucessful, carry on.
 	return nil
+
 }
 
 // Updateing other user info using a JSON request
 func (m *UserModel) UserUpdate(u User) error {
-	// Prepare Query statment
-	q := `UPDATE users
-	SET pfp_filepath = ($1)
-	WHERE email = ($2)
-	RETURNING id`
-
-	args := []any{u.Picture, u.Email}
-
-	err := m.DB.QueryRow(q, args).Scan(&u.ID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return ErrRecordNotFound
-		}
-		return err
-	}
-	// insert was sucessful, carry on.
 	return nil
 }
 
