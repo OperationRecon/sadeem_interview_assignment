@@ -162,5 +162,5 @@ func (app *application) deleteCategoryHandler(w http.ResponseWriter, r *http.Req
 
 	// Delete sucessful, write response
 	app.writeJSON(w, http.StatusOK, envelope{"message": "category deleted successfully"}, nil)
-	return
+
 }

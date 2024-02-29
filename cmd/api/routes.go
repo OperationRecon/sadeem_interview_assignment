@@ -23,16 +23,16 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	// User Methods
-	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.requireAuthenticatedUser(app.getUserHandler))
-	router.HandlerFunc(http.MethodPut, "/v1/users/:email", app.requireAuthenticatedUser(app.updateUserHandler))
-	router.HandlerFunc(http.MethodDelete, "/v1/users/:email", app.requireAuthenticatedUser(app.deleteUserHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.requireAdmin(app.requireAuthenticatedUser(app.getUserHandler)))
+	router.HandlerFunc(http.MethodPut, "/v1/users/:email", app.requireAdmin(app.requireAuthenticatedUser(app.updateUserHandler)))
+	router.HandlerFunc(http.MethodDelete, "/v1/users/:email", app.requireAdmin(app.requireAuthenticatedUser(app.deleteUserHandler)))
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.requireAuthenticatedUser(app.insertImageHandler))
+	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.requireAdmin(app.requireAuthenticatedUser(app.insertImageHandler)))
 	// Category methods
-	router.HandlerFunc(http.MethodPost, "/v1/categories", app.requireAuthenticatedUser(app.createCategoryHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAuthenticatedUser(app.getCategoriesHandler))
-	router.HandlerFunc(http.MethodPut, "/v1/categories/:id", app.requireAuthenticatedUser(app.updateCategoryHandler))
-	router.HandlerFunc(http.MethodDelete, "/v1/categories/:id", app.requireAuthenticatedUser(app.deleteCategoryHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/categories", app.requireAdmin(app.requireAuthenticatedUser(app.createCategoryHandler)))
+	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAdmin(app.requireAuthenticatedUser(app.getCategoriesHandler)))
+	router.HandlerFunc(http.MethodPut, "/v1/categories/:id", app.requireAdmin(app.requireAuthenticatedUser(app.updateCategoryHandler)))
+	router.HandlerFunc(http.MethodDelete, "/v1/categories/:id", app.requireAdmin(app.requireAuthenticatedUser(app.deleteCategoryHandler)))
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 

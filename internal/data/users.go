@@ -180,6 +180,12 @@ func (m *UserModel) UserDelete(email string) error {
 	// prep query
 	q := `DELETE FROM users WHERE email = $1`
 
+	// Ensure user isnt an admin first
+	u, _ := m.UserGet(email, http.Request{})
+
+	if m.IsAdmin(u.ID) {
+		return errors.New("cannot Delete admins")
+	}
 	_ = m.DB.QueryRow(q, email).Scan()
 	return nil
 }
@@ -225,4 +231,13 @@ func (m *UserModel) CheckPasswordMatches(u User, pass string) (bool, error) {
 		return false, err
 	}
 	return match, nil
+}
+
+func (m *UserModel) IsAdmin(id int) bool {
+	// prepare query
+	q := `SELECT id FROM admins WHERE id = $1`
+
+	err := m.DB.QueryRow(q, id).Scan(&id)
+
+	return err == nil
 }

@@ -175,3 +175,18 @@ func (app *application) requireAuthenticatedUser(next http.HandlerFunc) http.Han
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		// GET email parameter for same-user editing
+		email, _ := app.readEmailParam(r)
+
+		if !app.models.Users.IsAdmin(user.ID) && email != user.Email {
+			app.adminAuthenticationRequiredResponse(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
