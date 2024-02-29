@@ -32,6 +32,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/categories", app.requireAuthenticatedUser(app.createCategoryHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAuthenticatedUser(app.getCategoriesHandler))
 	router.HandlerFunc(http.MethodPut, "/v1/categories/:id", app.requireAuthenticatedUser(app.updateCategoryHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/categories/:id", app.requireAuthenticatedUser(app.deleteCategoryHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 

@@ -126,7 +126,9 @@ func (m *CategoryModel) CategoryUpdate(c Category) error {
 	return nil
 }
 
-// Category Delete by name
-func (m *CategoryModel) CategoryDelete(name string) error {
-	return nil
+// Category Delete by id
+func (m *CategoryModel) CategoryDelete(id int) {
+	// excecute query
+	m.DB.QueryRow("DELETE FROM categories WHERE id = $1", id)
+
 }

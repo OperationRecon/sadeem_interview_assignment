@@ -138,3 +138,29 @@ func (app *application) updateCategoryHandler(w http.ResponseWriter, r *http.Req
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) deleteCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the id delete the specfied category
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// ensure category to be deleted exists
+	_, err = app.models.Categories.CategoryGet(id)
+	if err != nil {
+		if err == data.ErrRecordNotFound {
+			app.notFoundResponse(w, r)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	app.models.Categories.CategoryDelete(id)
+
+	// Delete sucessful, write response
+	app.writeJSON(w, http.StatusOK, envelope{"message": "category deleted successfully"}, nil)
+	return
+}
