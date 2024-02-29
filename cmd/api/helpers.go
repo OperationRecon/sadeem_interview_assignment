@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
@@ -20,6 +21,19 @@ func (app *application) readEmailParam(r *http.Request) (string, error) {
 		return "", errors.New("invalid email parameter")
 	}
 	return email, nil
+}
+
+// Retrieve the "ID"  parameter from the current request context.
+func (app *application) readIDParam(r *http.Request) (int, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	if id <= 0 {
+		return 0, errors.New("invalid id parameter")
+	}
+	return int(id), nil
 }
 
 type envelope map[string]any

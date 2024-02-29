@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"interview_assignment.mohamednaas.net/internal/data"
@@ -73,6 +74,66 @@ func (app *application) getCategoriesHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) updateCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract the ID from the URL.
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+	// Fetch the existing record from the database, sending a 404 Not Found
+	// response to the client if we couldn't find a matching record.
+	category, err := app.models.Categories.CategoryGet(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	// Declare an input struct to hold the expected data from the client.
+	var input struct {
+		Name string `json:"name"`
+		ID   int    `json:"id"`
+	}
+	// Read the JSON request body data into the input struct.
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	// Copy the values from the request body to the appropriate fields of the category
+	// record.
+	category.Name = input.Name
+	category.ID = id
+	// Validate the updated record, sending the client a 422 Unprocessable Entity
+	// response if any checks fail.
+	v := validator.New()
+	if data.ValidateCategoryInsertion(v, &category); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Categories.CategoryUpdate(category)
+	if err != nil {
+		if err == data.ErrDuplicateCategoryName {
+			app.badRequestResponse(w, r, err)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Write the updated  record in a JSON response.
+	err = app.writeJSON(w, http.StatusOK, envelope{"category": category}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

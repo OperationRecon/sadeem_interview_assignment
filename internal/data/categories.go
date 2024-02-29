@@ -94,8 +94,35 @@ func (m *CategoryModel) CategoriesGet() ([]*Category, error) {
 	return categories, nil
 }
 
-// Category Update
-func (m *CategoryModel) CategoryUpdate(c *Category) error {
+func (m *CategoryModel) CategoryGet(id int) (Category, error) {
+	c := Category{}
+	q := `SELECT name, id FROM categories WHERE id = $1`
+
+	err := m.DB.QueryRow(q, id).Scan(&c.Name, &c.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return c, ErrRecordNotFound
+		}
+		return c, err
+	}
+	return c, nil
+}
+
+// Category Update, use ID to find it
+func (m *CategoryModel) CategoryUpdate(c Category) error {
+	// prepare query
+	q := `UPDATE categories SET name = $1 WHERE id = $2 RETURNING id`
+
+	// excecute the query
+	err := m.DB.QueryRow(q, c.Name, c.ID).Scan(&c.ID)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "categories_name_key"`:
+			return ErrDuplicateCategoryName
+		default:
+			return err
+		}
+	}
 	return nil
 }
 
