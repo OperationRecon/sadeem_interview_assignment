@@ -7,7 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (app *application) routes() *httprouter.Router {
+func (app *application) routes() http.Handler {
 	// Initialize a new httprouter router instance.
 	router := httprouter.New()
 
@@ -23,17 +23,17 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	// User Methods
-	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.getUserHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/users/:email", app.updateUserHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/users/:email", app.deleteUserHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/users/:email", app.requireAuthenticatedUser(app.getUserHandler))
+	router.HandlerFunc(http.MethodPut, "/v1/users/:email", app.requireAuthenticatedUser(app.updateUserHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/users/:email", app.requireAuthenticatedUser(app.deleteUserHandler))
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.insertImageHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.requireAuthenticatedUser(app.insertImageHandler))
 	// Category methods
-	router.HandlerFunc(http.MethodPost, "/v1/categories", app.createCategoryHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/categories", app.getCategoriesHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/categories", app.requireAuthenticatedUser(app.createCategoryHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAuthenticatedUser(app.getCategoriesHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
 	// Return the httprouter instance.
-	return router
+	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
 }

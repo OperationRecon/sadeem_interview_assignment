@@ -30,6 +30,14 @@ type User struct {
 	Picture  string `json:"picture"`
 }
 
+// Declare a new AnonymousUser variable.
+var AnonymousUser = &User{}
+
+// Check if a User instance is the AnonymousUser.
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
+
 // Perform checks to make sure that the registered user is valid
 func ValidateUserRegisteration(v *validator.Validator, u *User) {
 	v.Check(validator.NotBlank(u.Name), "name", "Name must be provided")
@@ -79,6 +87,29 @@ func (m *UserModel) UserGet(email string, r http.Request) (User, error) {
 
 	// excecute query
 	err := m.DB.QueryRow(q, email).Scan(&user.ID, &user.Name, &user.Email, &user.Picture)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return user, ErrRecordNotFound
+		}
+		return user, err
+	}
+
+	// Make nice URl to find image in
+	user.Picture = fmt.Sprintf("http://%s/static/%s", r.Host, user.Picture)
+
+	// all good? retirn user data
+	return user, nil
+}
+
+// Getting user info from the database
+func (m *UserModel) UserGetID(ID int64, r http.Request) (User, error) {
+	user := User{}
+	// prepare query
+	q := `SELECT id, name, email, pfp_filepath FROM users WHERE id = $1`
+
+	// excecute query
+	err := m.DB.QueryRow(q, ID).Scan(&user.ID, &user.Name, &user.Email, &user.Picture)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

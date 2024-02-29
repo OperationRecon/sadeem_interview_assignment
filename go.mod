@@ -9,3 +9,5 @@ require github.com/lib/pq v1.10.9
 require golang.org/x/crypto v0.20.0
 
 require github.com/pascaldekloe/jwt v1.12.0
+
+require golang.org/x/time v0.5.0
