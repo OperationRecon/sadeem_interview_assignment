@@ -27,6 +27,9 @@ type config struct {
 		maxIdleConns int
 		maxIdleTime  string
 	}
+	jwt struct {
+		secret string // Add a new field to store the JWT signing secret.
+	}
 }
 
 type application struct {
@@ -45,6 +48,7 @@ func main() {
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 	flag.StringVar(&cfg.pictureDir, "pfpicture directory", os.Getenv("sainpr_pfp_dir"), "Directory where users profile images are sotred")
+	flag.StringVar(&cfg.jwt.secret, "jwt-secret", os.Getenv("JWT_SECRET"), "JWT signing secret")
 
 	flag.Parse()
 

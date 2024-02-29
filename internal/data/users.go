@@ -23,10 +23,10 @@ type UserModel struct {
 }
 
 type User struct {
-	ID       int    `json:"-"`
+	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
-	Password string `json:"password"`
+	Password string `json:"-"`
 	Picture  string `json:"picture"`
 }
 
@@ -133,7 +133,7 @@ func (m *UserModel) UserUpdate(u User, email string) error {
 	err = m.DB.QueryRow(q, args...).Scan(&u.Email, &u.Name)
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "users_email"`:
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
 			return ErrDuplicateEmail
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrRecordNotFound
@@ -176,4 +176,22 @@ func Matches(plaintextPassword string, hash []byte) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func (m *UserModel) CheckPasswordMatches(u User, pass string) (bool, error) {
+	// get users hashed password
+	q := `SELECT password_hash FROM users WHERE email = $1`
+	var hash string
+	err := m.DB.QueryRow(q, u.Email).Scan(&hash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, ErrRecordNotFound
+		}
+		return false, err
+	}
+	match, err := Matches(pass, []byte(hash))
+	if err != nil {
+		return false, err
+	}
+	return match, nil
 }
