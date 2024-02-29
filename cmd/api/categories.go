@@ -51,7 +51,7 @@ func (app *application) createCategoryHandler(w http.ResponseWriter, r *http.Req
 		"category": category,
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope, nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

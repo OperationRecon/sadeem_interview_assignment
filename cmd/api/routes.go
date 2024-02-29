@@ -28,6 +28,9 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodDelete, "/v1/users/:email", app.requireAdmin(app.requireAuthenticatedUser(app.deleteUserHandler)))
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.createUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/:email/pfpicture", app.requireAdmin(app.requireAuthenticatedUser(app.insertImageHandler)))
+	// usercategory relations methods
+	router.HandlerFunc(http.MethodDelete, "/v1/user_categories", app.requireAdmin(app.requireAuthenticatedUser(app.deleteRelationsHandler)))
+	router.HandlerFunc(http.MethodPut, "/v1/user_categories", app.requireAdmin(app.requireAuthenticatedUser(app.setRelationsHandler)))
 	// Category methods
 	router.HandlerFunc(http.MethodPost, "/v1/categories", app.requireAdmin(app.requireAuthenticatedUser(app.createCategoryHandler)))
 	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAdmin(app.requireAuthenticatedUser(app.getCategoriesHandler)))

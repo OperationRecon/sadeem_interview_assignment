@@ -12,14 +12,16 @@ var (
 
 // A model struct to wrap around all the other models
 type Models struct {
-	Users      UserModel
-	Categories CategoryModel
+	Users          UserModel
+	Categories     CategoryModel
+	UserCategories UserCategoriesModel
 }
 
 // For ease of use, we also add a New() method which returns a Models struct
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Users:      UserModel{DB: db},
-		Categories: CategoryModel{DB: db},
+		Users:          UserModel{DB: db},
+		Categories:     CategoryModel{DB: db},
+		UserCategories: UserCategoriesModel{DB: db},
 	}
 }
