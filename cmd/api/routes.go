@@ -33,7 +33,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/v1/user_categories", app.requireAdmin(app.requireAuthenticatedUser(app.setRelationsHandler)))
 	// Category methods
 	router.HandlerFunc(http.MethodPost, "/v1/categories", app.requireAdmin(app.requireAuthenticatedUser(app.createCategoryHandler)))
-	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAdmin(app.requireAuthenticatedUser(app.getCategoriesHandler)))
+	router.HandlerFunc(http.MethodGet, "/v1/categories", app.requireAuthenticatedUser(app.getCategoriesHandler))
 	router.HandlerFunc(http.MethodPut, "/v1/categories/:id", app.requireAdmin(app.requireAuthenticatedUser(app.updateCategoryHandler)))
 	router.HandlerFunc(http.MethodDelete, "/v1/categories/:id", app.requireAdmin(app.requireAuthenticatedUser(app.deleteCategoryHandler)))
 

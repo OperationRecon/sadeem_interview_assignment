@@ -60,20 +60,30 @@ func (app *application) createCategoryHandler(w http.ResponseWriter, r *http.Req
 // Sends all categories to user, sorted by id
 func (app *application) getCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 
-	// get all categories from DB
-	categories, err := app.models.Categories.CategoriesGet()
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	// prepare response envelope
+	categories := []*data.Category{}
+	var err error
+	// Check if user is admin
+	user := app.contextGetUser(r)
 
-	// prepare Json response
-	envelope := envelope{
-		"message":    "all categories:",
-		"categories": categories,
-	}
+	if app.models.Users.IsAdmin(user.ID) {
+		// get all categories from DB
 
-	err = app.writeJSON(w, http.StatusOK, envelope, nil)
+		categories, err = app.models.Categories.CategoriesGet()
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+	} else {
+		categories, err = app.models.UserCategories.UserCategoriesGet(user.ID)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"categories": categories}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
