@@ -61,8 +61,11 @@ func (app *application) createCategoryHandler(w http.ResponseWriter, r *http.Req
 func (app *application) getCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// prepare response envelope
-	categories := []*data.Category{}
-	var err error
+
+	var (
+		err        error
+		categories []*data.Category
+	)
 	// Check if user is admin
 	user := app.contextGetUser(r)
 

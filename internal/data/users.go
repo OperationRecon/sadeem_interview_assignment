@@ -149,8 +149,8 @@ func (m *UserModel) UserUpdate(u User, email string) error {
 	// create query
 	q := `UPDATE users
 	set email = $1, name = $2, password_hash = $3
-	WHERE email = $1
-	RETURNING email, name `
+	WHERE email = $4
+	RETURNING id, email, name,  password_hash, pfp_filepath`
 
 	// Generate password hash to insert into db
 	pHashed, err := Set(u.Password)
@@ -158,10 +158,10 @@ func (m *UserModel) UserUpdate(u User, email string) error {
 		return err
 	}
 
-	args := []any{email, u.Name, pHashed}
+	args := []any{u.Email, u.Name, pHashed, email}
 
 	// execute query
-	err = m.DB.QueryRow(q, args...).Scan(&u.Email, &u.Name)
+	err = m.DB.QueryRow(q, args...).Scan(&u.ID, &u.Email, &u.Name, &u.Password, &u.Picture)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
@@ -171,6 +171,7 @@ func (m *UserModel) UserUpdate(u User, email string) error {
 
 		}
 	}
+
 	// insert was sucessful, carry on.
 	return nil
 }

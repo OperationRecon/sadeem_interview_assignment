@@ -249,6 +249,13 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	// fecth updated data
+	*user, err = app.models.Users.UserGet(user.Email, *r)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	// Compose JSON reply
 	envelope := envelope{
 		"message": "updated information:",
